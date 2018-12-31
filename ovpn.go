@@ -31,6 +31,39 @@ func run(name string, arg ...string) {
 	}
 }
 
+func nix(ovpn, ip, port, net, mask string) (s string) {
+	s += "{ config, pkgs, ... }:\n"
+	s += "{\n"
+	s += "  imports = [ ./hardware-configuration.nix ];\n"
+
+	s += "  boot.loader.grub.enable = true;\n"
+	s += "  boot.loader.grub.version = 2;\n"
+	s += "  boot.loader.grub.device = \"/dev/vda\";\n"
+
+	s += "  services.openssh = { enable = true; passwordAuthentication = false; };\n"
+
+	s += "  networking.hostName = \"vpn\";\n"
+
+	s += "  boot.kernel.sysctl.\"net.ipv4.ip_forward\" = 1;  \n"
+	s += "  networking.nat.enable = true;\n"
+	s += "  networking.firewall = {\n"
+	s += "    extraCommands = ''\n"
+	s += fmt.Sprintf("      iptables -t nat -A POSTROUTING -s %s/%s -j MASQUERADE\n", net, mask)
+	s += "    '';\n"
+	s += fmt.Sprintf("    allowedTCPPorts = [ %s ];\n", port)
+	s += "  };\n"
+
+	s += "  services.openvpn.servers.vpn.config = ''\n"
+	s += fmt.Sprintf("%s\n", ovpn)
+	s += "'';\n"
+
+	s += "  system.autoUpgrade.enable = true;\n"
+	s += "  system.stateVersion = \"18.09\";\n"
+	s += "}\n"
+
+	return
+}
+
 func initialize(iface, ip, port, net, mask string) {
 	run("easyrsa-init")
 	run("easyrsa", "init-pki")
@@ -101,9 +134,14 @@ func initialize(iface, ip, port, net, mask string) {
 		log.Fatalln(err)
 	}
 
-	log.Println("Server configuration file is saved to ovpn/server.ovpn")
+	log.Println("Server openvpn configuration file is saved to ovpn/server.ovpn")
 
-	// TODO generate nixos configuration
+	err = ioutil.WriteFile("server.nix", []byte(nix(s, ip, port, net, mask)), 0644)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	log.Println("NixOS configuration file is saved to server.nix")
 }
 
 func issue(name, iface, ip, port string) {
