@@ -1,8 +1,12 @@
 # ovpn
 
-Simplify VPN configuration management based on easyrsa.
+Simple VPN configuration management based on easyrsa.
 
 Goals is for omiting as much openvpn settings as possible by default, but then allow to set parameters that user need to change.
+
+## Installation
+
+    go get github.com/jollheef/ovpn
 
 ## Usage
 
