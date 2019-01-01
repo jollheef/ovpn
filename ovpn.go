@@ -40,7 +40,7 @@ func nix(ovpn, ip, port, net, mask string) (s string) {
 	s += "  boot.loader.grub.version = 2;\n"
 	s += "  boot.loader.grub.device = \"/dev/vda\";\n"
 
-	s += "  services.openssh = { enable = true; passwordAuthentication = false; };\n"
+	s += "  services.openssh.enable = true;\n"
 
 	s += "  networking.hostName = \"vpn\";\n"
 
